@@ -3,10 +3,26 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 class Square extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            tempValue: null,
+            permValue: null,
+        };
+    }
+
   render() {
     return (
-      <button className="square">
-        {/* TODO */}
+      <button 
+        className="square" 
+        onClick={ () => this.setState({permValue: 'X'})} 
+        onMouseOver={ () => { if(this.state.tempValue == null && this.state.permValue == null) {this.setState({tempValue: 'X'})} else {this.setState({tempValue: null})}}}
+        onMouseOut={ () => { if(this.state.tempValue != null && this.state.permValue == null) this.setState({tempValue: null})}}
+        //onMouseOver={ () => { this.setState({value: 'X'}) }}
+      >
+        {this.state.permValue} 
+        {this.state.tempValue}
       </button>
     );
   }
@@ -14,7 +30,7 @@ class Square extends React.Component {
 
 class Board extends React.Component {
   renderSquare(i) {
-    return <Square />;
+    return <Square value={i} popo={i}/>;
   }
 
   render() {
