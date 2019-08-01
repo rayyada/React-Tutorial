@@ -4,9 +4,9 @@ import './index.css';
 
 function Square(props) {
     return (
-      <button 
-        className="square" 
-        onClick={props.onClick} 
+      <button
+        className="square"
+        onClick={props.onClick}
         onMouseOver={props.onMouseOver}
         onMouseOut={props.onMouseOut}
         //onHover={ () => { if(this.state.tempValue != null && this.state.permValue != null) this.setState({tempValue: null})}}
@@ -22,7 +22,7 @@ class Board extends React.Component {
 
   renderSquare(i) {
     return (
-        <Square 
+        <Square
             value={this.props.squares[i]}
             value2={this.props.tempSquares[i]}
             onClick={() => this.props.onClick(i)}
@@ -32,30 +32,93 @@ class Board extends React.Component {
     );
   }
 
-  render() {
+  renderBoard(rows) {
+    let table = [];
+    for (let i = 0; i < rows; i++) {
+      let children = [];
+      for(let j = 0; j < rows; j++) {
+        children.push(this.renderSquare((i*rows)+j));
+      }
 
+      table.push(children);
+
+    }
+
+    var result = table.map((value, index) => {
+      return (
+        <div key={"row " + index} className="board-row">
+          {value}
+        </div>
+      );
+    });
+    return result;
+  }
+
+  render() {
+    var boardArray = this.renderBoard(3);
     return (
       <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
+        {boardArray}
       </div>
     );
   }
+}
 
-  
+class GameInfo extends React.Component {
+
+    renderStatus() {
+      const history = this.props.history;
+      const current = history[this.props.stepNumber];
+      const winner = calculateWinner(current.squares);
+      let status;
+      if (winner) {
+          status = 'Winner: ' + winner;
+      } else {
+          status = 'Next player: ' + (this.props.xIsNext ? 'X' : 'O');
+      }
+      return (<div>{status}</div>);
+    }
+
+    renderMoves() {
+      const history = this.props.history;
+      const moves = history.map((step, move) => {
+          const desc = move ?
+              'Go to move #' + move + ', ' + ((move % 2 === 1) ? 'X' : 'O') + ' to row ' + step.lastCoord[0] + ', col ' + step.lastCoord[1] :
+              'Go to game start';
+          return (
+              <li key={move}>
+                  <button
+                    onClick={() => this.props.jumpTo(move)}
+                    style={ this.props.stepNumber === move ? {fontWeight: 'bold'} : {fontWeight: 'normal'}}
+                  >
+                    {desc}
+                  </button>
+              </li>
+          );
+      });
+      return moves;
+    }
+
+    renderToggleButton() {
+      console.log(this.props.toggle);
+      return (<button onClick={() => this.props.toggle === true ? this.props.toggle = false : this.props.toggle = true}> Toggle </button>);
+    }
+
+    handleJumpTo(e) {
+      if (typeof this.props.jumpTo === 'function') {
+          this.props.jumpTo(e.target.value);
+      }
+    }
+
+    render() {
+      var status = this.renderStatus();
+      var toggleButton = this.renderToggleButton();
+      var moves = this.renderMoves();
+      var moves2 = !this.props.toggle ? moves : moves.reverse();
+      return (
+        <div>{[status,toggleButton,moves2]}</div>
+      );
+  }
 }
 
 class Game extends React.Component {
@@ -72,7 +135,7 @@ class Game extends React.Component {
         }
     }
 
-    
+
   handleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
@@ -85,7 +148,7 @@ class Game extends React.Component {
     tempSquares[i] = null;
     squares[i] = this.state.xIsNext ? 'X' : 'O';
 
-    this.setState({ tempSquares: tempSquares, 
+    this.setState({ tempSquares: tempSquares,
                     history: history.concat([{
                         squares: squares,
                         lastCoord: [Math.floor(i/3) + 1, (i % 3) + 1],
@@ -128,6 +191,8 @@ class Game extends React.Component {
   }
 
   jumpTo(step) {
+    console.log(this.props);
+      console.log(this.state);
     this.setState({
         stepNumber: step,
         xIsNext: (step % 2) === 0,
@@ -135,32 +200,13 @@ class Game extends React.Component {
   }
 
   render() {
-      const history = this.state.history;
-      const current = history[this.state.stepNumber];
-      const winner = calculateWinner(current.squares);
-      
-    const moves = history.map((step, move) => {
-        const desc = move ?
-            'Go to move #' + move + ', ' + ((move % 2 === 1) ? 'X' : 'O') + ' to row ' + step.lastCoord[0] + ', col ' + step.lastCoord[1] :
-            'Go to game start';
-        return (
-            <li key={move}>
-                <button onClick={() => this.jumpTo(move)}>{desc}</button>
-            </li>
-        );
-    });
-
-    let status;
-    if (winner) {
-        status = 'Winner: ' + winner;
-    } else {
-        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    }
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
 
     return (
       <div className="game">
         <div className="game-board">
-          <Board 
+          <Board
             squares = {current.squares}
             tempSquares = {this.state.tempSquares}
             onClick = {(i) => this.handleClick(i)}
@@ -169,8 +215,15 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <div>{ status }</div>
-          <ol>{ moves }</ol>
+          <GameInfo
+            history = {history}
+            stepNumber = {this.state.stepNumber}
+            xIsNext = {this.state.xIsNext}
+            jumpTo = {this.jumpTo}
+            toggle = {false}
+            moves = {null}
+            status = {null}
+          />
         </div>
       </div>
     );
