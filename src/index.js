@@ -9,8 +9,6 @@ function Square(props) {
         onClick={props.onClick}
         onMouseOver={props.onMouseOver}
         onMouseOut={props.onMouseOut}
-        //onHover={ () => { if(this.state.tempValue != null && this.state.permValue != null) this.setState({tempValue: null})}}
-        //onMouseOver={ () => { this.setState({value: 'X'}) }}
       >
         {props.value}
         {props.value2}
@@ -28,6 +26,7 @@ class Board extends React.Component {
             onClick={() => this.props.onClick(i)}
             onMouseOver={() => this.props.onMouseOver(i)}
             onMouseOut={() => this.props.onMouseOut(i)}
+            key={'square-'+i}
         />
     );
   }
@@ -46,7 +45,7 @@ class Board extends React.Component {
 
     var result = table.map((value, index) => {
       return (
-        <div key={"row " + index} className="board-row">
+        <div key={'row-'+index} className="board-row">
           {value}
         </div>
       );
@@ -66,6 +65,13 @@ class Board extends React.Component {
 
 class GameInfo extends React.Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            orderToggle: false,
+        }
+    }
+
     renderStatus() {
       const history = this.props.history;
       const current = history[this.props.stepNumber];
@@ -76,7 +82,7 @@ class GameInfo extends React.Component {
       } else {
           status = 'Next player: ' + (this.props.xIsNext ? 'X' : 'O');
       }
-      return (<div>{status}</div>);
+      return (status);
     }
 
     renderMoves() {
@@ -86,9 +92,9 @@ class GameInfo extends React.Component {
               'Go to move #' + move + ', ' + ((move % 2 === 1) ? 'X' : 'O') + ' to row ' + step.lastCoord[0] + ', col ' + step.lastCoord[1] :
               'Go to game start';
           return (
-              <li key={move}>
+              <li key={'move-'+move}>
                   <button
-                    onClick={() => this.props.jumpTo(move)}
+                    onClick={()=>this.props.jumpToHandler(move)}
                     style={ this.props.stepNumber === move ? {fontWeight: 'bold'} : {fontWeight: 'normal'}}
                   >
                     {desc}
@@ -100,24 +106,26 @@ class GameInfo extends React.Component {
     }
 
     renderToggleButton() {
-      console.log(this.props.toggle);
-      return (<button onClick={() => this.props.toggle === true ? this.props.toggle = false : this.props.toggle = true}> Toggle </button>);
+      return (
+          <button onClick={() => this.state.orderToggle === true ? this.setState({orderToggle: false}) : this.setState({orderToggle: true})}> Toggle </button>
+      );
     }
 
-    handleJumpTo(e) {
-      if (typeof this.props.jumpTo === 'function') {
-          this.props.jumpTo(e.target.value);
-      }
-    }
 
     render() {
       var status = this.renderStatus();
       var toggleButton = this.renderToggleButton();
-      var moves = this.renderMoves();
-      var moves2 = !this.props.toggle ? moves : moves.reverse();
-      return (
-        <div>{[status,toggleButton,moves2]}</div>
-      );
+      var renderedMoves = this.renderMoves();
+      var moves = !this.state.orderToggle ? renderedMoves : renderedMoves.reverse();
+      var objectArray = [status,toggleButton,moves];
+      const returnObject = objectArray.map((object, index) => {
+        return (
+          <div key={'gameInfo-'+index}>
+            {object}
+          </div>
+        )
+      })
+      return (returnObject);
   }
 }
 
@@ -160,7 +168,7 @@ class Game extends React.Component {
 
   handleMouseOver(i) {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const current = history[this.state.stepNumber];
     const squares = current.squares.slice();
 
     if (squares[i]) {
@@ -176,7 +184,7 @@ class Game extends React.Component {
 
   handleMouseOut(i) {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const current = history[this.state.stepNumber];
     const squares = current.squares.slice();
 
     if (squares[i]) {
@@ -190,9 +198,7 @@ class Game extends React.Component {
     this.setState({tempSquares: tempSquares});
   }
 
-  jumpTo(step) {
-    console.log(this.props);
-      console.log(this.state);
+  jumpToHandler = (step) => {
     this.setState({
         stepNumber: step,
         xIsNext: (step % 2) === 0,
@@ -219,10 +225,7 @@ class Game extends React.Component {
             history = {history}
             stepNumber = {this.state.stepNumber}
             xIsNext = {this.state.xIsNext}
-            jumpTo = {this.jumpTo}
-            toggle = {false}
-            moves = {null}
-            status = {null}
+            jumpToHandler = {this.jumpToHandler}
           />
         </div>
       </div>
