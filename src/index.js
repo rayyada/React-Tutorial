@@ -9,6 +9,7 @@ function Square(props) {
         onClick={props.onClick}
         onMouseOver={props.onMouseOver}
         onMouseOut={props.onMouseOut}
+
       >
         {props.value}
         {props.value2}
@@ -54,7 +55,7 @@ class Board extends React.Component {
   }
 
   render() {
-    var boardArray = this.renderBoard(3);
+    var boardArray = this.renderBoard(this.props.boardRows);
     return (
       <div>
         {boardArray}
@@ -69,7 +70,30 @@ class GameInfo extends React.Component {
         super(props);
         this.state = {
             orderToggle: false,
+            boardRows: this.props.boardRows,
         }
+    }
+
+    handleOnChange = (e) => {
+      this.setState({
+        boardRows: parseInt(e.target.value),
+      });
+    }
+
+    handleSubmit = (e) => {
+      this.props.boardRowsHandler(this.state.boardRows);
+      e.preventDefault();
+    }
+
+    renderRowInput() {
+      return (
+        <form onSubmit={this.handleSubmit}>
+          <label>
+          <input type="text" value={this.state.boardRows} onChange={this.handleOnChange} />
+          </label>
+          <input type="submit" value="Submit" />
+        </form>
+      );
     }
 
     renderStatus() {
@@ -79,6 +103,8 @@ class GameInfo extends React.Component {
       let status;
       if (winner) {
           status = 'Winner: ' + winner;
+      } else if (this.props.stepNumber === Math.pow(this.state.boardRows, 2)) {
+        status = 'Draw!';
       } else {
           status = 'Next player: ' + (this.props.xIsNext ? 'X' : 'O');
       }
@@ -107,17 +133,19 @@ class GameInfo extends React.Component {
 
     renderToggleButton() {
       return (
-          <button onClick={() => this.state.orderToggle === true ? this.setState({orderToggle: false}) : this.setState({orderToggle: true})}> Toggle </button>
+          <button onClick={() => this.state.orderToggle === true ? this.setState({orderToggle: false}) : this.setState({orderToggle: true})}> Toggle list order </button>
       );
     }
 
 
     render() {
+      var rowInput = this.renderRowInput();
       var status = this.renderStatus();
       var toggleButton = this.renderToggleButton();
       var renderedMoves = this.renderMoves();
       var moves = !this.state.orderToggle ? renderedMoves : renderedMoves.reverse();
-      var objectArray = [status,toggleButton,moves];
+
+      var objectArray = [rowInput,status,toggleButton,moves];
       const returnObject = objectArray.map((object, index) => {
         return (
           <div key={'gameInfo-'+index}>
@@ -140,6 +168,7 @@ class Game extends React.Component {
             tempSquares: Array(9).fill(null),
             xIsNext: true,
             stepNumber: 0,
+            boardRows: 3,
         }
     }
 
@@ -159,7 +188,7 @@ class Game extends React.Component {
     this.setState({ tempSquares: tempSquares,
                     history: history.concat([{
                         squares: squares,
-                        lastCoord: [Math.floor(i/3) + 1, (i % 3) + 1],
+                        lastCoord: [Math.floor(i/this.state.boardRows) + 1, (i % this.state.boardRows) + 1],
                     }]),
                     xIsNext: !this.state.xIsNext,
                     stepNumber: history.length,
@@ -205,6 +234,21 @@ class Game extends React.Component {
     });
   }
 
+  handleOnChange = (rows) => {
+    var history = [{
+        squares: Array(Math.pow(rows, 2)).fill(null),
+        lastCoord: [null, null],
+    }];
+    var tempSquares = Array(rows).fill(null);
+    this.setState({
+      history:history,
+      tempSquares: tempSquares,
+      stepNumber: 0,
+      xIsNext: true,
+      boardRows: rows,
+    })
+  }
+
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
@@ -218,6 +262,7 @@ class Game extends React.Component {
             onClick = {(i) => this.handleClick(i)}
             onMouseOver = {(i) => this.handleMouseOver(i)}
             onMouseOut = {(i) => this.handleMouseOut(i)}
+            boardRows = {this.state.boardRows}
           />
         </div>
         <div className="game-info">
@@ -226,6 +271,8 @@ class Game extends React.Component {
             stepNumber = {this.state.stepNumber}
             xIsNext = {this.state.xIsNext}
             jumpToHandler = {this.jumpToHandler}
+            boardRowsHandler = {this.handleOnChange}
+            boardRows = {this.state.boardRows}
           />
         </div>
       </div>
@@ -241,20 +288,36 @@ ReactDOM.render(
 );
 
 function calculateWinner(squares) {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+    const rows = Math.sqrt(squares.length);
+    const cols = Math.sqrt(squares.length);
+    let winCombos = [];
+
+    //Winnable methods count is row+count+2
+    for(let i = 0; i < rows; i++) {
+      let rowWinCombo = [];
+      let colWinCombo = [];
+      // Grab all winning combinations of straight rows
+      for(let j = 0; j < cols; j++) {
+        rowWinCombo.push((i*rows)+j);
+        colWinCombo.push((j*rows)+i);
+      }
+      winCombos.push(rowWinCombo);
+      winCombos.push(colWinCombo);
+    }
+
+    let leftDiagonal = [];
+    let rightDiagonal = [];
+    for(let i = 0; i < rows; i++) {
+      leftDiagonal.push((i*rows) + i);
+      rightDiagonal.push(((i+1)*rows) - i - 1);
+    }
+    winCombos.push(leftDiagonal);
+    winCombos.push(rightDiagonal);
+
+    for (let i = 0; i < winCombos.length; i++) {
+      let currentIndex = winCombos[i];
+      if(squares[currentIndex[0]] && currentIndex.every((val, i, arr) => squares[val] === squares[arr[0]] )) {
+        return squares[currentIndex[0]];
       }
     }
     return null;
