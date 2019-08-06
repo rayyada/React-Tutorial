@@ -2,14 +2,39 @@ import React from 'react';
 
 class Square extends React.Component {
 
-    shouldComponentUpdate(nextProps, nextState) {
-      if (this.props.value !== nextProps.value) {
-        return true;
+    state = {
+      hoverValue: null,
+    }
+
+    componentWillReceiveProps(nextProps) {
+      if (nextProps.clickValue !== null) {
+        this.setState({
+          hoverValue: null,
+        })
       }
-      if (this.props.value2 !== nextProps.value2) {
-        return true;
+    }
+
+    handleMouseOver(i) {
+      if (this.props.clickValue) {
+          return;
       }
-      return false;
+      var hoverValue = this.state.hoverValue;
+      if (hoverValue === null) {
+          hoverValue = this.props.hoverChar;
+      }
+      this.setState({hoverValue: hoverValue});
+    }
+  
+    handleMouseOut(i) {
+      if (this.props.clickValue) {
+          return;
+      }
+  
+      var hoverValue = this.state.hoverValue;
+      if (hoverValue !== null) {
+        hoverValue = null;
+      }
+      this.setState({hoverValue: hoverValue});
     }
 
     render() { 
@@ -18,11 +43,11 @@ class Square extends React.Component {
         <button
           className="square"
           onClick={this.props.onClick}
-          onMouseOver={this.props.onMouseOver}
-          onMouseOut={this.props.onMouseOut}
+          onMouseOver={(i) => { this.handleMouseOver(i)} }
+          onMouseOut={(i) => { this.handleMouseOut(i)} }
         >
-          {this.props.value}
-          {this.props.value2}
+          {this.props.clickValue}
+          {this.state.hoverValue}
         </button>
       );
     }

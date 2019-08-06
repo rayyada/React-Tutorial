@@ -11,7 +11,6 @@ class Game extends React.Component {
                 squares: Array(9).fill(null),
                 lastCoord: [null, null],
             }],
-            tempSquares: Array(9).fill(null),
             xIsNext: true,
             stepNumber: 0,
             boardRows: 3,
@@ -26,13 +25,9 @@ class Game extends React.Component {
     if (calculateWinner(squares) || squares[i]) {
         return;
     }
-
-    const tempSquares = this.state.tempSquares.slice();
-    tempSquares[i] = null;
     squares[i] = this.state.xIsNext ? 'X' : 'O';
 
-    this.setState({ tempSquares: tempSquares,
-                    history: history.concat([{
+    this.setState({ history: history.concat([{
                         squares: squares,
                         lastCoord: [Math.floor(i/this.state.boardRows) + 1, (i % this.state.boardRows) + 1],
                     }]),
@@ -40,8 +35,6 @@ class Game extends React.Component {
                     stepNumber: history.length,
                 });
   }
-
-
 
   jumpToHandler = (step) => {
     this.setState({
@@ -55,10 +48,8 @@ class Game extends React.Component {
         squares: Array(Math.pow(rows, 2)).fill(null),
         lastCoord: [null, null],
     }];
-    var tempSquares = Array(rows).fill(null);
     this.setState({
       history:history,
-      tempSquares: tempSquares,
       stepNumber: 0,
       xIsNext: true,
       boardRows: rows,
@@ -77,7 +68,7 @@ class Game extends React.Component {
             squares = {current.squares}
             onClick = {(i) => this.handleClick(i)}
             boardRows = {this.state.boardRows}
-            xIsNex = {this.state.xIsNext}
+            xIsNext = {this.state.xIsNext}
           />
         </div>
         <div className="game-info">
