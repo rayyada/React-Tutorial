@@ -77,7 +77,7 @@ class GameInfo extends React.Component {
 
 
     render() {
-    console.log("GAMEINFO RENDER");
+    // console.log("GAMEINFO RENDER");
       var rowInput = this.renderRowInput();
       var status = this.renderStatus();
       var toggleButton = this.renderToggleButton();

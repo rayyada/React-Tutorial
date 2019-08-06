@@ -48,7 +48,7 @@ class Board extends React.Component {
   }
 
   render() {
-  console.log("BOARD RENDER");
+  // console.log("BOARD RENDER");
     var boardArray = this.renderBoard(this.props.boardRows);
     return (
       <div>

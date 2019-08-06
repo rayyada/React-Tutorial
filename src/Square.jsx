@@ -38,7 +38,7 @@ class Square extends React.Component {
     }
 
     render() { 
-      console.log("SQUARE RENDER");
+      // console.log("SQUARE RENDER");
       return (
         <button
           className="square"
